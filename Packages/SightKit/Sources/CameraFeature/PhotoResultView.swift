@@ -27,14 +27,18 @@ struct PhotoResultView: View {
     private func content(for photo: PhotoAnalysis) -> some View {
         ScrollView {
             VStack(spacing: 16) {
-                Image(uiImage: photo.image)
-                    .resizable()
-                    .scaledToFit()
-                    .overlay {
-                        ResultOverlay(result: photo.result, imageSize: photo.imageSize, contentMode: .fit)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .accessibilityLabel("The picked photo")
+                if case .cutout(let cutout?)? = photo.result {
+                    CutoutStickerView(cutout: cutout)
+                } else {
+                    Image(uiImage: photo.image)
+                        .resizable()
+                        .scaledToFit()
+                        .overlay {
+                            ResultOverlay(result: photo.result, imageSize: photo.imageSize, contentMode: .fit)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .accessibilityLabel("The picked photo")
+                }
 
                 ModePicker(modes: model.modes, selection: modeSelection)
 

@@ -11,8 +11,13 @@ public struct AnalyzerSet: Sendable {
         self.photo = photo ?? live
     }
 
-    /// Modes that have a live analyzer, in picker order.
+    /// Every mode with an analyzer, in picker order. Some (Cutout) only work on stills.
     public var modes: [AnalysisMode] {
-        AnalysisMode.allCases.filter { live[$0] != nil }
+        AnalysisMode.allCases.filter { live[$0] != nil || photo[$0] != nil }
+    }
+
+    /// Whether the mode runs on the live camera, or needs a captured frame or a photo.
+    public func isLive(_ mode: AnalysisMode) -> Bool {
+        live[mode] != nil
     }
 }

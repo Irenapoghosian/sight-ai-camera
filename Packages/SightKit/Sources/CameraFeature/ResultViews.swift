@@ -34,6 +34,8 @@ struct ResultCard: View {
             ObjectSummary(objects: objects)
         case .text(let lines)? where !lines.isEmpty:
             TextSummary(lines: lines, copyableText: copyableText)
+        case .cutout(let cutout?)?:
+            CutoutSummary(cutout: cutout)
         default:
             placeholder
         }
@@ -62,6 +64,7 @@ struct ResultCard: View {
         case .classify: return "Nothing recognized yet"
         case .objects: return "No objects found yet"
         case .text: return "No text found yet"
+        case .cutout: return "No subject stands out from the background"
         }
     }
 }

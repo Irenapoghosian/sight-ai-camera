@@ -1,3 +1,4 @@
+import CoreImage
 import CoreML
 import SightCore
 import Vision
@@ -10,6 +11,18 @@ extension AnalysisImage {
             VNImageRequestHandler(cvPixelBuffer: buffer, orientation: orientation, options: [:])
         case .cgImage(let image):
             VNImageRequestHandler(cgImage: image, orientation: orientation, options: [:])
+        }
+    }
+}
+
+extension AnalysisImage {
+    /// The image as Core Image sees it, already rotated upright.
+    func uprightCIImage() -> CIImage {
+        switch source {
+        case .pixelBuffer(let buffer):
+            CIImage(cvPixelBuffer: buffer).oriented(orientation)
+        case .cgImage(let image):
+            CIImage(cgImage: image).oriented(orientation)
         }
     }
 }

@@ -101,7 +101,29 @@ final class ResultRulesTests: XCTestCase {
         XCTAssertTrue(AnalysisResult.text([]).isEmpty)
     }
 
+    func testCutoutsAreComparedByImageAndSummarized() throws {
+        let first = try makeImage()
+        let second = try makeImage()
+
+        XCTAssertEqual(CutoutImage(first), CutoutImage(first))
+        XCTAssertNotEqual(CutoutImage(first), CutoutImage(second))
+        XCTAssertEqual(Cutout(image: CutoutImage(first), subjectCount: 1).summary, "1 subject")
+        XCTAssertEqual(Cutout(image: CutoutImage(first), subjectCount: 3).summary, "3 subjects")
+
+        XCTAssertEqual(AnalysisResult.cutout(nil).mode, .cutout)
+        XCTAssertTrue(AnalysisResult.cutout(nil).isEmpty)
+        XCTAssertFalse(AnalysisResult.cutout(Cutout(image: CutoutImage(first), subjectCount: 1)).isEmpty)
+    }
+
     // MARK: - Helpers
+
+    private func makeImage() throws -> CGImage {
+        let context = try XCTUnwrap(CGContext(
+            data: nil, width: 2, height: 2, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        return try XCTUnwrap(context.makeImage())
+    }
 
     private func object(_ label: String, _ confidence: Float) -> DetectedObject {
         DetectedObject(label: label, confidence: confidence, boundingBox: CGRect(x: 0.2, y: 0.2, width: 0.3, height: 0.3))

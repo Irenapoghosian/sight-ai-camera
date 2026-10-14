@@ -17,7 +17,7 @@ import subprocess
 import sys
 
 VIEW_FILE = re.compile(r"(View|Views|Components|Screen)\.swift$")
-DEVICE_FILE = re.compile(r"(CameraService|CameraPreview|ClassificationAnalyzer|ObjectDetectionAnalyzer|TextAnalyzer|VisionSupport)\.swift$")
+DEVICE_FILE = re.compile(r"(CameraService|CameraPreview|ClassificationAnalyzer|CutoutAnalyzer|ObjectDetectionAnalyzer|TextAnalyzer|VisionSupport)\.swift$")
 
 
 def load_report(xcresult, report_path):

@@ -24,6 +24,8 @@ final class AppContainer {
             .classify: ClassificationAnalyzer(),
             // A still photo can afford the slower, more accurate text model.
             .text: TextAnalyzer(accuracy: .accurate),
+            // Stills only: on the camera, Cutout captures a frame first.
+            .cutout: CutoutAnalyzer(),
         ]
 
         // Objects mode appears only when the model is bundled.

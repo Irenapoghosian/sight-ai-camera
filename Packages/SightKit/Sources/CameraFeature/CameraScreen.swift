@@ -106,12 +106,18 @@ public struct CameraScreen: View {
     private var bottomPanel: some View {
         VStack(spacing: 14) {
             if model.cameraState == .running {
-                ResultCard(
-                    mode: model.mode,
-                    result: model.result,
-                    isPaused: model.isPaused,
-                    copyableText: model.copyableText
-                )
+                if model.isLiveMode {
+                    ResultCard(
+                        mode: model.mode,
+                        result: model.result,
+                        isPaused: model.isPaused,
+                        copyableText: model.copyableText
+                    )
+                } else {
+                    CapturePrompt(mode: model.mode) {
+                        Task { await model.captureFrame() }
+                    }
+                }
             }
             ModePicker(modes: model.modes, selection: modeSelection)
         }

@@ -8,6 +8,8 @@ public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
     case objects
     /// Printed and handwritten text (Vision text recognition).
     case text
+    /// The main subject lifted off its background, as a sticker (Vision subject lifting). Stills only.
+    case cutout
 
     public var id: String { rawValue }
 
@@ -16,6 +18,7 @@ public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
         case .classify: "Classify"
         case .objects: "Objects"
         case .text: "Text"
+        case .cutout: "Cutout"
         }
     }
 
@@ -25,6 +28,7 @@ public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
         case .classify: "sparkles"
         case .objects: "viewfinder"
         case .text: "text.viewfinder"
+        case .cutout: "scissors"
         }
     }
 
@@ -34,6 +38,7 @@ public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
         case .classify: "Point at anything to see what it is"
         case .objects: "Point at people, pets or things on a desk"
         case .text: "Point at a sign, a page or a label"
+        case .cutout: "Capture a frame or pick a photo to lift its subject"
         }
     }
 }

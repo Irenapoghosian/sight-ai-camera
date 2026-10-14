@@ -36,6 +36,38 @@ public struct DetectedObject: Equatable, Sendable {
     public var displayName: String { ResultRules.displayName(for: label) }
 }
 
+/// A `CGImage` that can travel between threads and be compared.
+///
+/// `@unchecked Sendable`: a `CGImage` is immutable. Two values are equal when they hold
+/// the very same image, which is all the UI needs to know whether to redraw.
+public struct CutoutImage: @unchecked Sendable, Equatable {
+    public let cgImage: CGImage
+
+    public init(_ cgImage: CGImage) {
+        self.cgImage = cgImage
+    }
+
+    public static func == (lhs: CutoutImage, rhs: CutoutImage) -> Bool {
+        lhs.cgImage === rhs.cgImage
+    }
+}
+
+/// The subject (or subjects) lifted off the background, cropped to fit, on transparency.
+public struct Cutout: Equatable, Sendable {
+    public let image: CutoutImage
+    public let subjectCount: Int
+
+    public init(image: CutoutImage, subjectCount: Int) {
+        self.image = image
+        self.subjectCount = subjectCount
+    }
+
+    /// "1 subject", "3 subjects"
+    public var summary: String {
+        subjectCount == 1 ? "1 subject" : "\(subjectCount) subjects"
+    }
+}
+
 /// One line of text found in the image.
 public struct RecognizedText: Equatable, Sendable {
     public let string: String
@@ -56,12 +88,15 @@ public enum AnalysisResult: Equatable, Sendable {
     case classifications([Classification])
     case objects([DetectedObject])
     case text([RecognizedText])
+    /// `nil` when no subject stands out from the background.
+    case cutout(Cutout?)
 
     public var mode: AnalysisMode {
         switch self {
         case .classifications: .classify
         case .objects: .objects
         case .text: .text
+        case .cutout: .cutout
         }
     }
 
@@ -70,6 +105,7 @@ public enum AnalysisResult: Equatable, Sendable {
         case .classifications(let labels): labels.isEmpty
         case .objects(let objects): objects.isEmpty
         case .text(let lines): lines.isEmpty
+        case .cutout(let cutout): cutout == nil
         }
     }
 

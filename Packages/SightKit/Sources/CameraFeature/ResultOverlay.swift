@@ -13,7 +13,7 @@ struct ResultOverlay: View {
             ObjectBoxesOverlay(objects: objects, imageSize: imageSize, contentMode: contentMode)
         case .text(let lines)?:
             TextBoxesOverlay(lines: lines, imageSize: imageSize, contentMode: contentMode)
-        case .classifications?, nil:
+        case .classifications?, .cutout?, nil:
             EmptyView()
         }
     }

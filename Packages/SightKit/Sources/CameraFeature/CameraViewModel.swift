@@ -38,6 +38,8 @@ public final class CameraViewModel {
     @ObservationIgnored private var meter = PerformanceMeter()
     @ObservationIgnored private var gate: FrameGate?
     @ObservationIgnored private var loop: Task<Void, Never>?
+    /// The newest camera frame, kept for "capture a frame" in still-only modes like Cutout.
+    @ObservationIgnored private(set) var latestFrame: AnalysisImage?
 
     public init(
         camera: any CameraSource,
@@ -54,6 +56,9 @@ public final class CameraViewModel {
     }
 
     public var captureSession: AVCaptureSession? { camera.captureSession }
+
+    /// `false` for modes such as Cutout that work on a captured frame or a photo instead.
+    public var isLiveMode: Bool { analyzers.isLive(mode) }
 
     /// The text to put on the clipboard: from the photo when one is open, otherwise from the camera.
     public var copyableText: String? {
@@ -101,6 +106,7 @@ public final class CameraViewModel {
         loop?.cancel()
         gate = nil
         loop = nil
+        latestFrame = nil
         if cameraState == .running || cameraState == .starting {
             cameraState = .idle
         }
@@ -132,6 +138,16 @@ public final class CameraViewModel {
             return
         }
         photo = PhotoAnalysis(image: image, source: source)
+        await analyzeCurrentPhoto()
+    }
+
+    /// Freezes the current camera frame and analyzes it like a picked photo.
+    public func captureFrame() async {
+        guard let frame = latestFrame, let snapshot = frame.snapshot() else {
+            errorMessage = "The camera isn't ready yet. Try again in a moment."
+            return
+        }
+        photo = PhotoAnalysis(image: UIImage(cgImage: snapshot), source: AnalysisImage(cgImage: snapshot))
         await analyzeCurrentPhoto()
     }
 
@@ -172,6 +188,7 @@ public final class CameraViewModel {
     }
 
     private func process(_ image: AnalysisImage) async {
+        latestFrame = image
         guard !isPaused, let analyzer = analyzers.live[mode] else { return }
         let requestedMode = mode
         let started = clock()

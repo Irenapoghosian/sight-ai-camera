@@ -5,7 +5,7 @@
 <h1 align="center">Sight</h1>
 
 <p align="center">
-  An on-device AI camera for iPhone. Point it at something and it tells you what it is, boxes every object it finds and reads any text, live, with no network.
+  An on-device AI camera for iPhone. Point it at something and it tells you what it is, boxes every object it finds, reads any text and lifts subjects into stickers, all on device with no network.
   Built with Vision, Core ML, AVFoundation and SwiftUI.
 </p>
 
@@ -26,6 +26,7 @@
 - **Classify**: Apple's built-in image classifier names what the camera sees ("Coffee mug 91%") and shows the top three labels with confidence bars.
 - **Objects**: a Core ML object detector (YOLOv3 Tiny, 80 kinds of objects) draws a labeled box around every person, cup, laptop or pet it finds, and the card counts them ("Cup ×2").
 - **Text**: live text recognition outlines every line it reads on the camera image. Pause to freeze the result, then copy all the text in reading order.
+- **Cutout**: lift the subject out of a photo or a captured camera frame, like long-pressing in the Photos app. It appears as a sticker with a white outline, and Share exports a transparent PNG (Save Image, Messages, anywhere).
 - **Photos mode**: pick any photo and analyze it with the more accurate models. Rotated photos are handled through their EXIF orientation. On the simulator, which has no camera, this is the way to try the app.
 - **Live performance meter**: analyzed frames per second and per-frame latency, measured on the device.
 - **Private by design**: every model runs on the iPhone. Nothing is uploaded, and the app has no network code at all.
@@ -36,7 +37,7 @@
 |---|---|:--:|
 | 1 | Camera, Classify and Text modes, Photos mode, performance meter | ✅ |
 | 2 | **Objects**: a Core ML object detector with live bounding boxes | ✅ |
-| 3 | **Cutout**: lift the subject out of a photo and share it as a sticker | 🔜 |
+| 3 | **Cutout**: lift the subject out of a photo and share it as a sticker | ✅ |
 | 4 | Polish, screenshots and the 1.0 release | 🔜 |
 
 ## How it works
@@ -55,6 +56,7 @@ flowchart LR
 - **The overlays line up.** Vision returns normalized boxes with a bottom-left origin. `OverlayGeometry` maps them onto the screen for both aspect-fill (live camera) and aspect-fit (photos), with the Y axis flipped. It is pure math, so it is unit-tested.
 - **Upright everywhere.** Camera frames are rotated to portrait at capture (`videoRotationAngle = 90`), and photos pass their EXIF orientation to Vision, so results match what the user sees.
 - **The model is injected and loaded lazily.** `ObjectDetectionAnalyzer` takes any Core ML detector whose pipeline ends in non-maximum suppression. It loads on the first Objects frame, off the main thread, so launch stays instant, and runs on the CPU in the simulator, which has no Neural Engine.
+- **Live where it helps, stills where it doesn't.** `AnalyzerSet` keeps live and photo analyzers apart, so a mode can be still-only. Cutout takes a few hundred milliseconds and needs one sharp frame, so on the camera it captures the newest frame (copied out of the camera's reusable buffer) instead of running on every frame.
 - **Smooth numbers.** `PerformanceMeter` counts throughput over a sliding one-second window and smooths latency with an exponential moving average, so the meter doesn't flicker.
 
 ## Architecture
@@ -78,7 +80,7 @@ flowchart TD
 |---|---|---|
 | `SightCore` | Results (`Classification`, `RecognizedText`), the `FrameAnalyzer` contract, `ResultRules`, `OverlayGeometry`, `PerformanceMeter` and `FrameThrottle`. No UIKit, no Vision. | — |
 | `CameraCapture` | `CameraService` (`AVCaptureSession` on its own queues, recovers from media-server resets), the `CameraSource` protocol and the live `CameraPreview`. | SightCore |
-| `VisionAnalyzers` | `ClassificationAnalyzer`, `ObjectDetectionAnalyzer` (Core ML through Vision) and `TextAnalyzer` (fast for live video, accurate for photos), behind `FrameAnalyzer`. | SightCore |
+| `VisionAnalyzers` | `ClassificationAnalyzer`, `ObjectDetectionAnalyzer` (Core ML through Vision), `TextAnalyzer` (fast for live video, accurate for photos) and `CutoutAnalyzer` (subject lifting), behind `FrameAnalyzer`. | SightCore |
 | `DesignSystem` | Colors, formatters and components (`GlassCard`, `ConfidenceBar`, `MetricsPill`). | SightCore |
 | `CameraFeature` | `CameraViewModel` (permission, the analysis loop, photos), the camera screen and the photo result sheet. | SightCore, CameraCapture, DesignSystem |
 
@@ -108,11 +110,11 @@ Press **⌘R** to run, or **⌘U** to run every module's tests.
 
 ## Testing
 
-**41 unit tests** across the modules, run on every push by GitHub Actions together with SwiftLint in strict mode. The coverage badge counts logic files only; SwiftUI views and the thin camera and Vision wrappers are checked on a device.
+**45 unit tests** across the modules, run on every push by GitHub Actions together with SwiftLint in strict mode. The coverage badge counts logic files only; SwiftUI views and the thin camera and Vision wrappers are checked on a device.
 
 - `SightCoreTests`: label ranking, object filtering and counting, reading order of text, overlay geometry for fill and fit, FPS and latency math, frame throttling, image orientation.
 - `DesignSystemTests`: percent, FPS and millisecond formatting.
-- `CameraFeatureTests`: the view model with a fake camera, fake analyzers and a ticking clock. It covers permission, no camera, start and stop, live results and metrics, mode switching, pausing, and photo analysis including failures and rotation.
+- `CameraFeatureTests`: the view model with a fake camera, fake analyzers and a ticking clock. It covers permission, no camera, start and stop, live results and metrics, mode switching, pausing, capturing a frame for still-only modes, and photo analysis including failures and rotation.
 
 ## Model
 

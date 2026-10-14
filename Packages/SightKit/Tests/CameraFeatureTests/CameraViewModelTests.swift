@@ -135,6 +135,48 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertEqual(model.mode, .text)
     }
 
+    // MARK: - Still-only modes
+
+    func testCutoutIsOfferedForStillsOnly() {
+        let lifter = FakeAnalyzer(mode: .cutout, output: Fixtures.sticker)
+        let model = CameraViewModel(
+            camera: camera,
+            analyzers: AnalyzerSet(live: [.classify: classifier], photo: [.classify: classifier, .cutout: lifter])
+        )
+
+        XCTAssertEqual(model.modes, [.classify, .cutout])
+        XCTAssertTrue(model.isLiveMode)
+        model.select(.cutout)
+        XCTAssertFalse(model.isLiveMode)
+    }
+
+    func testCapturingAFrameLiftsItsSubject() async throws {
+        let lifter = FakeAnalyzer(mode: .cutout, output: Fixtures.sticker)
+        let model = makeModel(photo: [.classify: classifier, .cutout: lifter])
+        await model.start()
+        model.select(.cutout)
+
+        camera.emit(Fixtures.frame(width: 8, height: 4))
+        try await waitUntil { model.latestFrame != nil }
+        // The camera keeps running, but nothing is analyzed live in a still-only mode.
+        XCTAssertNil(model.result)
+        XCTAssertEqual(lifter.calls, 0)
+
+        await model.captureFrame()
+
+        XCTAssertEqual(model.photo?.result, Fixtures.sticker)
+        XCTAssertEqual(model.photo?.imageSize, CGSize(width: 8, height: 4))
+        XCTAssertEqual(lifter.calls, 1)
+    }
+
+    func testCapturingBeforeTheFirstFrameExplainsWhy() async {
+        let model = makeModel()
+        await model.captureFrame()
+
+        XCTAssertNil(model.photo)
+        XCTAssertNotNil(model.errorMessage)
+    }
+
     // MARK: - Photos
 
     func testPhotosUseThePhotoAnalyzer() async {

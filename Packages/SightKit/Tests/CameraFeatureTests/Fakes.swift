@@ -87,6 +87,8 @@ enum Fixtures {
         DetectedObject(label: "laptop", confidence: 0.93, boundingBox: CGRect(x: 0.4, y: 0.3, width: 0.5, height: 0.4)),
     ])
 
+    static let sticker = AnalysisResult.cutout(Cutout(image: CutoutImage(cgImage(width: 2, height: 2)), subjectCount: 1))
+
     static func cgImage(width: Int = 8, height: Int = 4) -> CGImage {
         let context = CGContext(
             data: nil,
