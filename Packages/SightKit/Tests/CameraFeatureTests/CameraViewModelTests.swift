@@ -91,6 +91,27 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertEqual(model.copyableText, "Espresso\nLatte")
     }
 
+    func testObjectsModeUsesTheDetector() async throws {
+        let detector = FakeAnalyzer(mode: .objects, output: Fixtures.desk)
+        let clock = self.clock
+        let model = CameraViewModel(
+            camera: camera,
+            analyzers: AnalyzerSet(live: [.classify: classifier, .objects: detector, .text: reader]),
+            maxFrameRate: 1000,
+            clock: { clock.now() }
+        )
+        XCTAssertEqual(model.modes, [.classify, .objects, .text])
+
+        await model.start()
+        model.select(.objects)
+        camera.emit(Fixtures.frame())
+        try await waitUntil { model.result != nil }
+
+        XCTAssertEqual(model.result, Fixtures.desk)
+        XCTAssertEqual(detector.calls, 1)
+        XCTAssertNil(model.copyableText)
+    }
+
     func testPausedFramesAreNotAnalyzed() async throws {
         let model = makeModel()
         await model.start()

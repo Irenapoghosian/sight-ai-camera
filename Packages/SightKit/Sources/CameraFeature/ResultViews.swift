@@ -30,6 +30,8 @@ struct ResultCard: View {
         switch result {
         case .classifications(let labels)? where !labels.isEmpty:
             ClassificationList(labels: labels)
+        case .objects(let objects)? where !objects.isEmpty:
+            ObjectSummary(objects: objects)
         case .text(let lines)? where !lines.isEmpty:
             TextSummary(lines: lines, copyableText: copyableText)
         default:
@@ -56,7 +58,11 @@ struct ResultCard: View {
         if isWorking { return "Looking…" }
         if didFail { return "This image couldn't be analyzed." }
         if result == nil { return mode.hint }
-        return mode == .text ? "No text found yet" : "Nothing recognized yet"
+        switch mode {
+        case .classify: return "Nothing recognized yet"
+        case .objects: return "No objects found yet"
+        case .text: return "No text found yet"
+        }
     }
 }
 

@@ -18,9 +18,44 @@ public enum ResultRules {
         )
     }
 
-    /// "golden_retriever" → "Golden retriever", "sky" → "Sky".
+    /// The strongest detections first, without the guesses.
+    public static func topObjects(
+        _ objects: [DetectedObject],
+        minimumConfidence: Float = 0.35,
+        limit: Int = 12
+    ) -> [DetectedObject] {
+        Array(
+            objects
+                .filter { $0.confidence >= minimumConfidence }
+                .sorted { $0.confidence > $1.confidence }
+                .prefix(limit)
+        )
+    }
+
+    /// "2 × Person, 1 × Cup": one entry per label, the most frequent first.
+    public static func objectCounts(_ objects: [DetectedObject]) -> [ObjectCount] {
+        Dictionary(grouping: objects, by: \.label)
+            .map { label, group in
+                ObjectCount(label: label, count: group.count, bestConfidence: group.map(\.confidence).max() ?? 0)
+            }
+            .sorted { lhs, rhs in
+                lhs.count != rhs.count ? lhs.count > rhs.count : lhs.bestConfidence > rhs.bestConfidence
+            }
+    }
+
+    /// Darknet's COCO labels that aren't plain English.
+    private static let labelAliases = [
+        "aeroplane": "airplane",
+        "diningtable": "dining table",
+        "motorbike": "motorcycle",
+        "pottedplant": "potted plant",
+        "sofa": "couch",
+        "tvmonitor": "TV",
+    ]
+
+    /// "golden_retriever" → "Golden retriever", "sky" → "Sky", "tvmonitor" → "TV".
     public static func displayName(for identifier: String) -> String {
-        let words = identifier
+        let words = (labelAliases[identifier] ?? identifier)
             .replacingOccurrences(of: "_", with: " ")
             .trimmingCharacters(in: .whitespaces)
         guard let first = words.first else { return identifier }

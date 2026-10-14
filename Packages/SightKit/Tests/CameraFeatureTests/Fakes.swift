@@ -82,6 +82,11 @@ enum Fixtures {
         RecognizedText(string: "Latte", confidence: 0.97, boundingBox: CGRect(x: 0.1, y: 0.5, width: 0.3, height: 0.05)),
     ])
 
+    static let desk = AnalysisResult.objects([
+        DetectedObject(label: "cup", confidence: 0.88, boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.2, height: 0.2)),
+        DetectedObject(label: "laptop", confidence: 0.93, boundingBox: CGRect(x: 0.4, y: 0.3, width: 0.5, height: 0.4)),
+    ])
+
     static func cgImage(width: Int = 8, height: Int = 4) -> CGImage {
         let context = CGContext(
             data: nil,

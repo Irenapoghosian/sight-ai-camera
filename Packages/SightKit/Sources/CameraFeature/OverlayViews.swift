@@ -45,10 +45,14 @@ struct ModePicker: View {
                 Button {
                     withAnimation(.snappy) { selection = mode }
                 } label: {
-                    Label(mode.title, systemImage: mode.systemImage)
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 9)
+                    VStack(spacing: 3) {
+                        Image(systemName: mode.systemImage)
+                            .font(.body.weight(.semibold))
+                        Text(mode.title)
+                            .font(.caption2.weight(.semibold))
+                    }
+                    .frame(width: 72)
+                    .padding(.vertical, 8)
                         .foregroundStyle(selection == mode ? Color.black : Color.white)
                         .background {
                             if selection == mode {
@@ -59,6 +63,7 @@ struct ModePicker: View {
                         }
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(mode.title)
                 .accessibilityAddTraits(selection == mode ? .isSelected : [])
             }
         }

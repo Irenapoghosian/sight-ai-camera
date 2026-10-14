@@ -31,9 +31,7 @@ struct PhotoResultView: View {
                     .resizable()
                     .scaledToFit()
                     .overlay {
-                        if case .text(let lines)? = photo.result {
-                            TextBoxesOverlay(lines: lines, imageSize: photo.imageSize, contentMode: .fit)
-                        }
+                        ResultOverlay(result: photo.result, imageSize: photo.imageSize, contentMode: .fit)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .accessibilityLabel("The picked photo")

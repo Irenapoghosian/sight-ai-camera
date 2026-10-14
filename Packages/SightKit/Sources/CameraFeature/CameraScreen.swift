@@ -60,9 +60,7 @@ public struct CameraScreen: View {
             if let session = model.captureSession {
                 CameraPreview(session: session)
                     .overlay {
-                        if case .text(let lines)? = model.result {
-                            TextBoxesOverlay(lines: lines, imageSize: model.frameSize, contentMode: .fill)
-                        }
+                        ResultOverlay(result: model.result, imageSize: model.frameSize, contentMode: .fill)
                     }
             }
         case .denied:
@@ -84,6 +82,16 @@ public struct CameraScreen: View {
             Spacer()
             if model.cameraState == .running {
                 MetricsPill(model.metrics)
+            }
+            PhotosPicker(selection: $pickedItem, matching: .images) {
+                Image(systemName: "photo.on.rectangle")
+                    .font(.body.weight(.semibold))
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Analyze a photo")
+            if model.cameraState == .running {
                 CircleIconButton(
                     model.isPaused ? "Resume" : "Pause",
                     systemImage: model.isPaused ? "play.fill" : "pause.fill"
@@ -105,23 +113,7 @@ public struct CameraScreen: View {
                     copyableText: model.copyableText
                 )
             }
-            HStack {
-                PhotosPicker(selection: $pickedItem, matching: .images) {
-                    Image(systemName: "photo.on.rectangle")
-                        .font(.body.weight(.semibold))
-                        .frame(width: 44, height: 44)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Analyze a photo")
-
-                Spacer(minLength: 8)
-                ModePicker(modes: model.modes, selection: modeSelection)
-                Spacer(minLength: 8)
-
-                // Balances the photo button so the picker stays centered.
-                Color.clear.frame(width: 44, height: 44)
-            }
+            ModePicker(modes: model.modes, selection: modeSelection)
         }
         .padding(.bottom, 8)
     }

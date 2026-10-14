@@ -18,6 +18,24 @@ public struct Classification: Equatable, Sendable, Identifiable {
     public var displayName: String { ResultRules.displayName(for: identifier) }
 }
 
+/// One object found in the image, e.g. "cup" at 0.87 with its box.
+public struct DetectedObject: Equatable, Sendable {
+    public let label: String
+    /// 0…1
+    public let confidence: Float
+    /// Normalized Vision coordinates: 0…1, origin at the bottom-left of the image.
+    public let boundingBox: CGRect
+
+    public init(label: String, confidence: Float, boundingBox: CGRect) {
+        self.label = label
+        self.confidence = confidence
+        self.boundingBox = boundingBox
+    }
+
+    /// "diningtable" → "Dining table".
+    public var displayName: String { ResultRules.displayName(for: label) }
+}
+
 /// One line of text found in the image.
 public struct RecognizedText: Equatable, Sendable {
     public let string: String
@@ -36,11 +54,13 @@ public struct RecognizedText: Equatable, Sendable {
 /// What an analyzer found in one image.
 public enum AnalysisResult: Equatable, Sendable {
     case classifications([Classification])
+    case objects([DetectedObject])
     case text([RecognizedText])
 
     public var mode: AnalysisMode {
         switch self {
         case .classifications: .classify
+        case .objects: .objects
         case .text: .text
         }
     }
@@ -48,6 +68,7 @@ public enum AnalysisResult: Equatable, Sendable {
     public var isEmpty: Bool {
         switch self {
         case .classifications(let labels): labels.isEmpty
+        case .objects(let objects): objects.isEmpty
         case .text(let lines): lines.isEmpty
         }
     }

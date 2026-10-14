@@ -29,6 +29,42 @@ final class ResultRulesTests: XCTestCase {
         XCTAssertEqual(ResultRules.displayName(for: ""), "")
     }
 
+    func testDarknetLabelsReadNaturally() {
+        XCTAssertEqual(ResultRules.displayName(for: "tvmonitor"), "TV")
+        XCTAssertEqual(ResultRules.displayName(for: "diningtable"), "Dining table")
+        XCTAssertEqual(ResultRules.displayName(for: "cell phone"), "Cell phone")
+    }
+
+    func testTopObjectsAreSortedFilteredAndLimited() {
+        let objects = [
+            object("cup", 0.5),
+            object("person", 0.9),
+            object("ghost", 0.1),
+            object("laptop", 0.7),
+        ]
+
+        let top = ResultRules.topObjects(objects, minimumConfidence: 0.35, limit: 2)
+
+        XCTAssertEqual(top.map(\.label), ["person", "laptop"])
+    }
+
+    func testObjectsAreCountedPerLabel() {
+        let objects = [
+            object("cup", 0.6),
+            object("person", 0.8),
+            object("cup", 0.9),
+            object("laptop", 0.95),
+        ]
+
+        let counts = ResultRules.objectCounts(objects)
+
+        // Most frequent first; ties go to the more confident label.
+        XCTAssertEqual(counts.map(\.label), ["cup", "laptop", "person"])
+        XCTAssertEqual(counts.first?.count, 2)
+        XCTAssertEqual(counts.first?.bestConfidence, 0.9)
+        XCTAssertEqual(counts.first?.displayName, "Cup")
+    }
+
     func testFilteredTextDropsBlankAndUnsureLines() {
         let lines = [
             text("OPEN", confidence: 0.9),
@@ -59,10 +95,17 @@ final class ResultRulesTests: XCTestCase {
     func testResultKnowsItsMode() {
         XCTAssertEqual(AnalysisResult.classifications([]).mode, .classify)
         XCTAssertEqual(AnalysisResult.text([]).mode, .text)
+        XCTAssertEqual(AnalysisResult.objects([]).mode, .objects)
+        XCTAssertTrue(AnalysisResult.objects([]).isEmpty)
+        XCTAssertNil(AnalysisResult.objects([object("cup", 1)]).copyableText)
         XCTAssertTrue(AnalysisResult.text([]).isEmpty)
     }
 
     // MARK: - Helpers
+
+    private func object(_ label: String, _ confidence: Float) -> DetectedObject {
+        DetectedObject(label: label, confidence: confidence, boundingBox: CGRect(x: 0.2, y: 0.2, width: 0.3, height: 0.3))
+    }
 
     private func text(_ string: String, confidence: Float = 1, minX: CGFloat = 0, minY: CGFloat = 0) -> RecognizedText {
         RecognizedText(string: string, confidence: confidence, boundingBox: CGRect(x: minX, y: minY, width: 0.3, height: 0.05))

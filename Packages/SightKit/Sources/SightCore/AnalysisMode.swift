@@ -4,6 +4,8 @@ import Foundation
 public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
     /// What is in the picture: "dog", "laptop", "sky"… (Vision image classification).
     case classify
+    /// Where things are: a box around every person, cup, laptop… (Core ML object detection).
+    case objects
     /// Printed and handwritten text (Vision text recognition).
     case text
 
@@ -12,6 +14,7 @@ public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
     public var title: String {
         switch self {
         case .classify: "Classify"
+        case .objects: "Objects"
         case .text: "Text"
         }
     }
@@ -20,6 +23,7 @@ public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
     public var systemImage: String {
         switch self {
         case .classify: "sparkles"
+        case .objects: "viewfinder"
         case .text: "text.viewfinder"
         }
     }
@@ -28,6 +32,7 @@ public enum AnalysisMode: String, CaseIterable, Identifiable, Sendable {
     public var hint: String {
         switch self {
         case .classify: "Point at anything to see what it is"
+        case .objects: "Point at people, pets or things on a desk"
         case .text: "Point at a sign, a page or a label"
         }
     }

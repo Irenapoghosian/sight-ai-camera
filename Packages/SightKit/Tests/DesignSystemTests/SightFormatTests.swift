@@ -15,6 +15,13 @@ final class SightFormatTests: XCTestCase {
         XCTAssertEqual(SightFormat.framesPerSecond(0), "0 FPS")
     }
 
+    func testLabelColorsAreStableAndInRange() {
+        let index = LabelPalette.index(for: "person")
+        XCTAssertEqual(LabelPalette.index(for: "person"), index)
+        XCTAssertTrue(LabelPalette.colors.indices.contains(index))
+        XCTAssertTrue(LabelPalette.colors.indices.contains(LabelPalette.index(for: "")))
+    }
+
     func testMilliseconds() {
         XCTAssertEqual(SightFormat.milliseconds(23.4), "23 ms")
         XCTAssertEqual(SightFormat.milliseconds(0.4), "<1 ms")
