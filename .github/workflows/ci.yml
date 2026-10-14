@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: SwiftLint
+    runs-on: ubuntu-latest
+    container: ghcr.io/realm/swiftlint:0.57.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint
+        run: swiftlint lint --strict --reporter github-actions-logging
+
+  test:
+    name: Test modules & build app
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: write   # only used to publish the coverage badge to the `badges` branch
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick a simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone')))")
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Test SightKit modules
+        working-directory: Packages/SightKit
+        run: |
+          xcodebuild test \
+            -scheme SightKit-Package \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -enableCodeCoverage YES \
+            -resultBundlePath "$RUNNER_TEMP/SightKit.xcresult" \
+            -quiet
+
+      - name: Coverage report
+        run: |
+          python3 scripts/coverage.py "$RUNNER_TEMP/SightKit.xcresult" \
+            --badge "$RUNNER_TEMP/coverage.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish coverage badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          cd "$RUNNER_TEMP"
+          if ! git clone --quiet --depth 1 --branch badges "$REMOTE" badges; then
+            git init --quiet badges
+            git -C badges checkout --quiet -b badges
+            git -C badges remote add origin "$REMOTE"
+          fi
+          cp coverage.json badges/coverage.json
+          cd badges
+          git config user.name "github-actions[bot]"
+          git config user.email "41898099+github-actions[bot]@users.noreply.github.com"
+          git add coverage.json
+          if ! git diff --cached --quiet; then
+            git commit --quiet -m "Update coverage badge"
+            git push --quiet origin badges
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build the app
+        run: |
+          xcodegen generate
+          xcodebuild build \
+            -project Sight.xcodeproj \
+            -scheme Sight \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
