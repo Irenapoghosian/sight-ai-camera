@@ -60,6 +60,10 @@ public final class CameraViewModel {
     /// `false` for modes such as Cutout that work on a captured frame or a photo instead.
     public var isLiveMode: Bool { analyzers.isLive(mode) }
 
+    /// The FPS pill and the pause button only mean something while frames are analyzed live;
+    /// in still-only modes like Cutout they would just read "0 FPS".
+    public var showsLiveControls: Bool { cameraState == .running && isLiveMode }
+
     /// The text to put on the clipboard: from the photo when one is open, otherwise from the camera.
     public var copyableText: String? {
         if let photo { return photo.result?.copyableText }

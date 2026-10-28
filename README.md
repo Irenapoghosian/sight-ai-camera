@@ -110,7 +110,7 @@ Press **⌘R** to run, or **⌘U** to run every module's tests.
 
 ## Testing
 
-**45 unit tests** across the modules, run on every push by GitHub Actions together with SwiftLint in strict mode. The coverage badge counts logic files only; SwiftUI views and the thin camera and Vision wrappers are checked on a device.
+**46 unit tests** across the modules, run on every push by GitHub Actions together with SwiftLint in strict mode. The coverage badge counts logic files only; SwiftUI views and the thin camera and Vision wrappers are checked on a device.
 
 - `SightCoreTests`: label ranking, object filtering and counting, reading order of text, overlay geometry for fill and fit, FPS and latency math, frame throttling, image orientation.
 - `DesignSystemTests`: percent, FPS and millisecond formatting.

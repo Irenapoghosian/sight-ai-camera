@@ -80,8 +80,9 @@ public struct CameraScreen: View {
                 .foregroundStyle(.sightGradient)
                 .accessibilityAddTraits(.isHeader)
             Spacer()
-            if model.cameraState == .running {
+            if model.showsLiveControls {
                 MetricsPill(model.metrics)
+                    .transition(.opacity)
             }
             PhotosPicker(selection: $pickedItem, matching: .images) {
                 Image(systemName: "photo.on.rectangle")
@@ -91,7 +92,7 @@ public struct CameraScreen: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Analyze a photo")
-            if model.cameraState == .running {
+            if model.showsLiveControls {
                 CircleIconButton(
                     model.isPaused ? "Resume" : "Pause",
                     systemImage: model.isPaused ? "play.fill" : "pause.fill"

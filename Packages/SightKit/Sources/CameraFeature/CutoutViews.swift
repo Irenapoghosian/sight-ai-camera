@@ -81,6 +81,7 @@ struct CapturePrompt: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Capture")
+                .accessibilityHint(mode.hint)
             }
         }
     }

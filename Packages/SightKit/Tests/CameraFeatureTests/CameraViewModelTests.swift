@@ -150,6 +150,18 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertFalse(model.isLiveMode)
     }
 
+    func testLiveControlsHideInStillOnlyModes() async {
+        let lifter = FakeAnalyzer(mode: .cutout, output: Fixtures.sticker)
+        let model = makeModel(photo: [.classify: classifier, .cutout: lifter])
+        XCTAssertFalse(model.showsLiveControls, "nothing to show before the camera runs")
+
+        await model.start()
+        XCTAssertTrue(model.showsLiveControls)
+
+        model.select(.cutout)
+        XCTAssertFalse(model.showsLiveControls)
+    }
+
     func testCapturingAFrameLiftsItsSubject() async throws {
         let lifter = FakeAnalyzer(mode: .cutout, output: Fixtures.sticker)
         let model = makeModel(photo: [.classify: classifier, .cutout: lifter])

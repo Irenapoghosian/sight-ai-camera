@@ -23,6 +23,8 @@ struct ResultCard: View {
                 content
             }
         }
+        .animation(.snappy, value: result)
+        .animation(.snappy, value: isWorking)
     }
 
     @ViewBuilder

@@ -50,17 +50,19 @@ struct ModePicker: View {
                             .font(.body.weight(.semibold))
                         Text(mode.title)
                             .font(.caption2.weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                     }
-                    .frame(width: 72)
+                    .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                        .foregroundStyle(selection == mode ? Color.black : Color.white)
-                        .background {
-                            if selection == mode {
-                                Capsule()
-                                    .fill(Color.sightAccent)
-                                    .matchedGeometryEffect(id: "selection", in: namespace)
-                            }
+                    .foregroundStyle(selection == mode ? Color.black : Color.white)
+                    .background {
+                        if selection == mode {
+                            Capsule()
+                                .fill(Color.sightAccent)
+                                .matchedGeometryEffect(id: "selection", in: namespace)
                         }
+                    }
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(mode.title)
